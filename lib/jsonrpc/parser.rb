@@ -4,6 +4,14 @@ require 'multi_json'
 require 'dry-validation'
 
 module JsonRPC
+  class RequestSchema < Dry::Validation::Contract
+    params do
+      required(:jsonrpc).filled(:str?, eql?: '2.0')
+      required(:method).filled(:str?)
+      optional(:params) { type?(Array) | type?(Hash) }
+      optional(:id) { none? | type?(String) | type?(Integer) }
+    end
+  end
   class Parser
     def parse(request_body)
       parsed = parse_json(request_body)
@@ -28,7 +36,7 @@ module JsonRPC
     end
 
     def validate(parsed)
-      validation = RequestSchema.call(parsed)
+      validation = JsonRPC::RequestSchema.new.call(parsed)
       validated = validation.to_h
       validated[:invalid] = validation.failure?
       validated
@@ -36,13 +44,6 @@ module JsonRPC
 
     def create_request(parsed)
       Request.new(validate(parsed))
-    end
-
-    RequestSchema = Dry::Validation::Contract do
-      required(:jsonrpc).filled(:str?, eql?: '2.0')
-      required(:method).filled(:str?)
-      optional(:params) { type?(Array) | type?(Hash) }
-      optional(:id) { none? | type?(String) | type?(Integer) }
     end
   end
 end

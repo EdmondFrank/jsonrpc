@@ -38,7 +38,7 @@ module JsonRPC
       Request.new(validate(parsed))
     end
 
-    RequestSchema = Dry::Validation.Schema do
+    RequestSchema = Dry::Validation::Contract do
       required(:jsonrpc).filled(:str?, eql?: '2.0')
       required(:method).filled(:str?)
       optional(:params) { type?(Array) | type?(Hash) }
